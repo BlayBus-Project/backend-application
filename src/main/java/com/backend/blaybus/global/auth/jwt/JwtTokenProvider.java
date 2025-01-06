@@ -29,7 +29,7 @@ public class JwtTokenProvider {
     @Value("${springboot.jwt.secret}")
     private String secretKey;
     private Key key;
-    private final long tokenValidMillisecond = 1000L * 60 * 60; // 1시간
+    private final long tokenValidMillisecond = 1000L * 60 * 60 * 24; // 24시간
 
     public JwtTokenProvider(@Lazy UserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
@@ -43,9 +43,9 @@ public class JwtTokenProvider {
         logger.info("[init] JwtTokenProvider 내 secretKey 초기화 완료");
     }
 
-    public String createToken(String email, String name, List<String> roles) {
-        Claims claims = Jwts.claims().setSubject(email);
-        claims.put("fullName", name);
+    public String createToken(String id, String password, List<String> roles) {
+        Claims claims = Jwts.claims().setSubject(id);
+        claims.put("fullName", password);
         claims.put("roles", roles);
 
         Date now = new Date();
@@ -61,12 +61,12 @@ public class JwtTokenProvider {
 
     public Authentication getAuthentication(String token) {
         logger.info("[getAuthentication] 토큰 인증 정보 조회 시작");
-        UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUsername(token));
+        UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUserId(token));
         logger.info("[getAuthentication] 토큰 인증 정보 조회 완료, UserDetails userName: {}", userDetails.getUsername());
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
-    public String getUsername(String token) {
+    public String getUserId(String token) {
         logger.info("[getUsername] 토큰에서 회원 구별 정보 추출");
         // parser() 대신 parserBuilder()를 사용하여 키 설정
         String info = Jwts.parserBuilder() // 변경된 부분
