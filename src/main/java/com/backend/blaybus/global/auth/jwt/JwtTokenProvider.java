@@ -26,35 +26,31 @@ public class JwtTokenProvider {
     private final UserDetailsService userDetailsService;
     private final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
-    @Value("${springboot.jwt.secret}")
-    private String secretKey;
-    private Key key;
+    private final Key key;
     private final long tokenValidMillisecond = 1000L * 60 * 60 * 24; // 24시간
 
-    public JwtTokenProvider(@Lazy UserDetailsService userDetailsService) {
+    public JwtTokenProvider(
+            @Lazy UserDetailsService userDetailsService,
+            @Value("${springboot.jwt.secret}") String secretKey
+    ) {
+        this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
         this.userDetailsService = userDetailsService;
     }
 
-    @PostConstruct
-    protected void init() {
-        logger.info("[init] JwtTokenProvider 내 secretKey 초기화 시작");
-        secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes(StandardCharsets.UTF_8));
-        key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8)); // 비밀 키 생성
-        logger.info("[init] JwtTokenProvider 내 secretKey 초기화 완료");
-    }
-
     public String createToken(String id, String password, List<String> roles) {
-        Claims claims = Jwts.claims().setSubject(id);
-        claims.put("fullName", password);
+        Claims claims = Jwts.claims();
+        claims.put("password", password);
         claims.put("roles", roles);
 
         Date now = new Date();
         String token = Jwts.builder()
+                .setSubject(id)
                 .setClaims(claims)
                 .setIssuedAt(now)
                 .setExpiration(new Date(now.getTime() + tokenValidMillisecond))
                 .signWith(key) // 변경된 부분: secretKey 대신 key를 사용
                 .compact();
+
         logger.info("[createToken] 토큰 생성 완료");
         return token;
     }

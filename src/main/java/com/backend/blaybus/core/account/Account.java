@@ -1,9 +1,7 @@
 package com.backend.blaybus.core.account;
 
 import com.backend.blaybus.global.base.BaseTime;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,6 +17,8 @@ import java.time.LocalDate;
 @Table(name = "account")
 public class Account extends BaseTime {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String employeeId;
     private String name;
     private LocalDate joinedDate;
@@ -27,5 +27,8 @@ public class Account extends BaseTime {
     private String accountId;
     private String oldPassword;
     private String changedPassword;
+
+    @Enumerated(EnumType.STRING)
+    private Affiliation affiliation;
     //private Image imageUrl // 추후 캐릭터 이미지 URL
 }
